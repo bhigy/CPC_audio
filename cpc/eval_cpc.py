@@ -182,6 +182,7 @@ def main(args):
     logs = {"epoch": []}
     epochs = []
     valAccuracyList = []
+    valAccuracySubsetsList = []
     for checkpoint in checkpoints:
         start_time = time.time()
 
@@ -219,6 +220,7 @@ def main(args):
 
         currentAccuracy = float(locLogsVal["locAcc_val"].mean())
         valAccuracyList.append(100*currentAccuracy)
+        valAccuracySubsetsList.append([100*float(locLogsVal[f"locAcc_val_{i}"].mean()) for i in range(len(valLoader_list))])
         
         for key, value in locLogsVal.items():
             if key not in logs:
@@ -230,7 +232,7 @@ def main(args):
         utils.save_logs(logs, os.path.join(args.pathCheckpoint, "eval",  "eval_logs.json"))
 
         with open(os.path.join(args.pathCheckpoint, "eval",  "eval_valAcc_info.txt"), 'w') as file:
-            outLines = [f"Epoch {ep} : {acc}" for ep, acc in zip(epochs, valAccuracyList)] + \
+            outLines = [f"Epoch {ep} : {acc} {tuple(accs)}" for ep, acc, accs in zip(epochs, valAccuracyList, valAccuracySubsetsList)] + \
                        [f"Best valAcc : checkpoint_{epochs[np.argmax(valAccuracyList)]}"]
             file.write("\n".join(outLines))
 
