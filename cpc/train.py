@@ -19,6 +19,7 @@ import cpc.utils.misc as utils
 import cpc.feature_loader as fl
 from cpc.cpc_default_config import set_default_cpc_config
 from cpc.dataset import AudioBatchData, findAllSeqs, filterSeqs, parseSeqLabels
+from cpc.mixout import MixoutWrapper
 
 
 def getCriterion(args, downsampling, nSpeakers, nPhones):
@@ -355,6 +356,16 @@ def main(args):
     cpcCriterion.cuda()
     cpcModel.cuda()
 
+
+    # Applying mixout
+    if args.mixoutCPC:
+        print("Activating mixout for CPCModel")
+        cpcModel = cpcModel.apply(MixoutWrapper)
+    if args.mixoutCriterion:
+        print("Activating mixout for CPCCriterion")
+        cpcCriterion = cpcCriterion.apply(MixoutWrapper)
+
+
     # Optimizer
     g_params = list(cpcCriterion.parameters()) + list(cpcModel.parameters())
 
@@ -491,9 +502,15 @@ def parseArgs(argv):
                            "available GPUs)")
     group_gpu.add_argument('--batchSizeGPU', type=int, default=8,
                            help='Number of batches per GPU.')
+
+    
     parser.add_argument('--debug', action='store_true',
                         help="Load only a very small amount of files for "
                         "debugging purposes.")
+    parser.add_argument('--mixoutCPC', action='store_true',
+                       help='Apply mixout to CPC model when doing finetuning.')
+    parser.add_argument('--mixoutCriterion', action='store_true',
+                       help='Apply mixout to CPC Criterion when doing finetuning.')
     args = parser.parse_args(argv)
 
     if args.pathDB is None and (args.pathCheckpoint is None or args.restart):
