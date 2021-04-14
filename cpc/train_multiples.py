@@ -195,6 +195,7 @@ def run(trainDataset_list,
             return
     else:
         valAccuracyList = []
+    valAccuracySubsetsList = []
 
     for epoch in range(startEpoch, nEpoch):
 
