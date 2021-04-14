@@ -193,9 +193,14 @@ def run(trainDataset_list,
         if count_inverse(valAccuracyList) > patience:
             print(f"The patience={patience} has been reached, early stopping activated. Stopped!")
             return
+        valAccuracySubsetsList = [100*np.mean(ls) for ls in logs['locAcc_val_0']]
+        for i in range(1,len(valLoader_list)):
+            if f'locAcc_val_{i}' in logs:
+                for j in range(len(valAccuracySubsetsList)):
+                    valAccuracySubsetsList[j].append(100*np.mean(logs[f'locAcc_val_{i}'][j]))
     else:
         valAccuracyList = []
-    valAccuracySubsetsList = []
+        valAccuracySubsetsList = []
 
     for epoch in range(startEpoch, nEpoch):
 
@@ -258,8 +263,8 @@ def run(trainDataset_list,
             utils.save_logs(logs, pathCheckpoint + "_logs.json")
 
             with open(os.path.join(os.path.dirname(pathCheckpoint), "valAcc_info.txt"), 'w') as file:
-                outLines = [f"Epoch {ep} : {acc} {tuple(accs)}" for ep, acc, accs in zip(epochs, valAccuracyList, valAccuracySubsetsList)] + \
-                           [f"Best valAcc : checkpoint_{epochs[np.argmax(valAccuracyList)]}"]
+                outLines = [f"Epoch {ep} : {acc} {tuple(accs)}" for ep, (acc, accs) in enumerate(zip(valAccuracyList, valAccuracySubsetsList))] + \
+                           [f"Best valAcc : checkpoint_{np.argmax(valAccuracyList)}"]
                 file.write("\n".join(outLines))
 
         if earlyStopping:
