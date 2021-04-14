@@ -16,11 +16,15 @@ parameter: 2.bias     Vanilla distance: 1.75e-05  Mixout distance: 1.01e-05
 
 import torch
 import torch.nn as nn
+from collections import OrderedDict
 
 
 def MixoutWrapper(module: nn.Module, p: float = 0.5):
     """
     Implementation of Mixout (https://arxiv.org/abs/1909.11299).
+    by Stephen Roller (https://stephenroller.com)
+    Modified from original version (https://gist.github.com/stephenroller/f45a372e231825f9f5578e9e705f4e95)
+    to handle multiple-GPUs.
     Use with:
     >>> mixout_model = model.apply(MixoutWrapper).
     """
@@ -29,8 +33,8 @@ def MixoutWrapper(module: nn.Module, p: float = 0.5):
     module._params_orig = dict()
     _params_learned = nn.ParameterDict()
     for n, q in list(module.named_parameters(recurse=False)):
-        c = q.clone().detach()
-        c.requires_grad = False
+        c = torch.tensor(q.clone())
+        # c.requires_grad = False
         module._params_orig[n] = c
         _params_learned[n] = q
         module._names.append(n)
@@ -50,15 +54,77 @@ def MixoutWrapper(module: nn.Module, p: float = 0.5):
                 - p * module._params_orig[n]
             ) / (1 - p)
         else:
+            return torch.tensor(module._params_learned[n])
+
+    def hook(module, input):
+        for n in module._names:
+            try:
+                v = mixout(module, n)
+                setattr(module, n, v)
+            except:
+                breakpoint()
+
+    module.register_forward_pre_hook(hook)
+    return module
+
+def mGPUsMixoutWrapper(module: nn.Module, p: float = 0.5):
+    """
+    Implementation of Mixout (https://arxiv.org/abs/1909.11299).
+    by Stephen Roller (https://stephenroller.com)
+    Modified from original version (https://gist.github.com/stephenroller/f45a372e231825f9f5578e9e705f4e95)
+    to handle multiple-GPUs by Tu Anh NGUYEN (nguyentuanh208@gmail.com).
+    Use with:
+    >>> mixout_model = model.apply(mGPUsMixoutWrapper).
+    """
+    # duplicate all the parameters, making copies of them and freezing them
+    module._names = []
+    module._params_orig = dict()
+    _params_learned = nn.ParameterDict()
+    for n, q in list(module.named_parameters(recurse=False)):
+        # modified to handle multiple-GPUs
+        c = q.clone()
+        if module.__class__.__name__ not in ['RNN', 'GRU', 'LSTM']: # Deal with RNN classes that have flatten_parameters()
+            c = c.detach()
+            c.requires_grad = False
+        module._params_orig[n] = c
+        _params_learned[n] = q
+        module._names.append(n)
+        delattr(module, n)
+        setattr(module, n, c)
+    if module._names:
+        module._params_learned = _params_learned
+
+    def mixout(module, n):
+        if module.training:
+            o = module._params_orig[n]
+            mask = (torch.rand_like(o) < p).type_as(o)
+            # modified to handle multiple-GPUs
+            combined_params = (1 - mask) * module._params_learned[n]
+            with torch.no_grad():
+                combined_params += mask * module._params_orig[n] - p * module._params_orig[n]
+            combined_params = combined_params / (1 - p)
+            return combined_params
+        else:
             return module._params_learned[n]
 
     def hook(module, input):
         for n in module._names:
-            v = mixout(module, n)
-            setattr(module, n, v)
+            try:
+                v = mixout(module, n)
+                setattr(module, n, v)
+            except:
+                breakpoint()
 
     module.register_forward_pre_hook(hook)
     return module
+
+def get_mixout_learned_state_dict(learned_state_dict):
+    converted_state_dict = OrderedDict()
+    for name, value in learned_state_dict.items():
+        if '_params_learned' in name:
+            name = name.replace('._params_learned','')
+        converted_state_dict[name] = value
+    return converted_state_dict
 
 
 def learn_vanilla():

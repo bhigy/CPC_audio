@@ -19,7 +19,7 @@ import cpc.utils.misc as utils
 import cpc.feature_loader as fl
 from cpc.cpc_default_config import set_default_cpc_config
 from cpc.dataset import AudioBatchData, findAllSeqs, filterSeqs, parseSeqLabels
-from cpc.mixout import MixoutWrapper
+from cpc.mixout import MixoutWrapper, mGPUsMixoutWrapper, get_mixout_learned_state_dict
 
 
 def getCriterion(args, downsampling, nSpeakers, nPhones):
@@ -215,6 +215,7 @@ def run(trainDataset,
         valAccuracyList.append(100*currentAccuracy)
         if currentAccuracy > bestAcc:
             bestStateDict = fl.get_module(cpcModel).state_dict()
+            bestStateDict = get_mixout_learned_state_dict(bestStateDict)
 
         for key, value in dict(locLogsTrain, **locLogsVal).items():
             if key not in logs:
@@ -230,6 +231,11 @@ def run(trainDataset,
 
             modelStateDict = fl.get_module(cpcModel).state_dict()
             criterionStateDict = fl.get_module(cpcCriterion).state_dict()
+
+            # breakpoint()
+
+            modelStateDict = get_mixout_learned_state_dict(modelStateDict)
+            criterionStateDict = get_mixout_learned_state_dict(criterionStateDict)
 
             fl.save_checkpoint(modelStateDict, criterionStateDict,
                                optimizer.state_dict(), bestStateDict,
