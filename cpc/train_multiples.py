@@ -130,9 +130,8 @@ def valStep(dataLoader_list,
 
     cpcCriterion.eval()
     cpcModel.eval()
+
     logs = {}
-    cpcCriterion.eval()
-    cpcModel.eval()
     iter = 0
 
     for i, dataLoader in enumerate(dataLoader_list):
@@ -229,6 +228,7 @@ def run(trainDataset_list,
 
         currentAccuracy = float(locLogsVal["locAcc_val"].mean())
         valAccuracyList.append(100*currentAccuracy)
+        valAccuracySubsetsList.append([100*float(locLogsVal[f"locAcc_val_{i}"].mean()) for i in range(len(valLoader_list))])
         if currentAccuracy > bestAcc:
             bestStateDict = fl.get_module(cpcModel).state_dict()
             bestStateDict = get_mixout_learned_state_dict(bestStateDict)
@@ -257,7 +257,8 @@ def run(trainDataset_list,
             utils.save_logs(logs, pathCheckpoint + "_logs.json")
 
             with open(os.path.join(os.path.dirname(pathCheckpoint), "valAcc_info.txt"), 'w') as file:
-                outLines = [f"Epoch {ep} : {acc}" for ep, acc in enumerate(valAccuracyList)] + [f"Best valAcc : checkpoint_{np.argmax(valAccuracyList)}"]
+                outLines = [f"Epoch {ep} : {acc} {tuple(accs)}" for ep, acc, accs in zip(epochs, valAccuracyList, valAccuracySubsetsList)] + \
+                           [f"Best valAcc : checkpoint_{epochs[np.argmax(valAccuracyList)]}"]
                 file.write("\n".join(outLines))
 
         if earlyStopping:
