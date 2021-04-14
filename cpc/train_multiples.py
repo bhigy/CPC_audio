@@ -542,6 +542,10 @@ def parseArgs(argv):
     parser.add_argument('--debug', action='store_true',
                         help="Load only a very small amount of files for "
                         "debugging purposes.")
+    parser.add_argument('--mixoutCPC', action='store_true',
+                       help='Apply mixout to CPC model when doing finetuning.')
+    parser.add_argument('--mixoutCriterion', action='store_true',
+                       help='Apply mixout to CPC Criterion when doing finetuning.')
     args = parser.parse_args(argv)
 
     if args.pathDB is None and (args.pathCheckpoint is None or args.restart):
