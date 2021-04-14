@@ -19,7 +19,7 @@ import torch.nn as nn
 from collections import OrderedDict
 
 
-def MixoutWrapper(module: nn.Module, p: float = 0.8):
+def MixoutWrapper(module: nn.Module, p: float = 0.9):
     """
     Implementation of Mixout (https://arxiv.org/abs/1909.11299).
     by Stephen Roller (https://stephenroller.com)
