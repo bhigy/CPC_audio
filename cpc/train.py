@@ -366,10 +366,10 @@ def main(args):
     # Applying mixout
     if args.mixoutCPC:
         print("Activating mixout for CPCModel")
-        cpcModel = cpcModel.apply(MixoutWrapper)
+        cpcModel = cpcModel.apply(lambda _model : MixoutWrapper(_model, p = args.mixoutProb))
     if args.mixoutCriterion:
         print("Activating mixout for CPCCriterion")
-        cpcCriterion = cpcCriterion.apply(MixoutWrapper)
+        cpcCriterion = cpcCriterion.apply(lambda _model : MixoutWrapper(_model, p = args.mixoutProb))
 
 
     # Optimizer
@@ -514,9 +514,11 @@ def parseArgs(argv):
                         help="Load only a very small amount of files for "
                         "debugging purposes.")
     parser.add_argument('--mixoutCPC', action='store_true',
-                       help='Apply mixout to CPC model when doing finetuning.')
+                        help='Apply mixout to CPC model when doing finetuning.')
     parser.add_argument('--mixoutCriterion', action='store_true',
-                       help='Apply mixout to CPC Criterion when doing finetuning.')
+                        help='Apply mixout to CPC Criterion when doing finetuning.')
+    parser.add_argument('--mixoutProb', type=float, default=0.9,
+                        help='Probability of keeping old weights. Default: 0.9')
     args = parser.parse_args(argv)
 
     if args.pathDB is None and (args.pathCheckpoint is None or args.restart):
