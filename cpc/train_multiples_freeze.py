@@ -413,6 +413,9 @@ def main(args):
             iGRU = n[-1]
             if 'gru'+iGRU in args.freeze:
                 x.requires_grad=False
+    if 'criteron' in args.freeze:
+        for x in cpcCriterion.parameters():
+            x.requires_grad=False
 
     cpcCriterion.cuda()
     cpcModel.cuda()
