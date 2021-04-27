@@ -401,19 +401,19 @@ def main(args):
 
     # Freezing params
     if 'conv' in args.freeze:
-        for n, x in model.gEncoder.named_parameters():
+        for n, x in cpcModel.gEncoder.named_parameters():
             if 'conv' in n:
                 x.requires_grad=False
     if 'BN' in args.freeze:
-        for n, x in model.gEncoder.named_parameters():
+        for n, x in cpcModel.gEncoder.named_parameters():
             if 'batchNorm' in n:
                 x.requires_grad=False
-    for n, x in gAR.named_parameters():
+    for n, x in cpcModel.gAR.named_parameters():
         if len(n) >= 4 and n[-4:-1]=='h_l':
             iGRU = n[-1]
             if 'gru'+iGRU in args.freeze:
                 x.requires_grad=False
-    if 'criteron' in args.freeze:
+    if 'criterion' in args.freeze:
         for x in cpcCriterion.parameters():
             x.requires_grad=False
 
