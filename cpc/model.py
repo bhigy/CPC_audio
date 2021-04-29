@@ -293,7 +293,8 @@ class RotatedCPCModel(nn.Module):
     def __init__(self,
                  encoder,
                  AR,
-                 Rotation=None):
+                 Rotation=None,
+                 rotation_random_init=False):
 
         super(RotatedCPCModel, self).__init__()
         self.gEncoder = encoder
@@ -301,9 +302,10 @@ class RotatedCPCModel(nn.Module):
         rotationMatrixSize = AR.getDimOutput()
         if Rotation is None:
             self.rotation = nn.Linear(rotationMatrixSize,rotationMatrixSize)
-            # Init identity matrix
-            self.rotation.weight.data.copy_(torch.eye(rotationMatrixSize))
-            self.rotation.bias.data.copy_(torch.tensor(0.))
+            if not rotation_random_init:
+                # Init identity matrix
+                self.rotation.weight.data.copy_(torch.eye(rotationMatrixSize))
+                self.rotation.bias.data.copy_(torch.tensor(0.))
         else:
             self.rotation = Rotation
 
