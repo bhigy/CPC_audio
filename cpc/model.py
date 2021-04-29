@@ -288,6 +288,31 @@ class CPCModel(nn.Module):
         cFeature = self.gAR(encodedData)
         return cFeature, encodedData, label
 
+class RotatedCPCModel(nn.Module):
+
+    def __init__(self,
+                 encoder,
+                 AR,
+                 Rotation=None):
+
+        super(RotatedCPCModel, self).__init__()
+        self.gEncoder = encoder
+        self.gAR = AR
+        rotationMatrixSize = AR.getDimOutput()
+        if Rotation is None:
+            self.rotation = nn.Linear(rotationMatrixSize,rotationMatrixSize)
+            # Init identity matrix
+            self.rotation.weight.data.copy_(torch.eye(rotationMatrixSize))
+            self.rotation.bias.data.copy_(torch.tensor(0.))
+        else:
+            self.rotation = Rotation
+
+    def forward(self, batchData, label):
+        encodedData = self.gEncoder(batchData).permute(0, 2, 1)
+        cFeature = self.gAR(encodedData)
+        cFeature = self.rotation(cFeature)
+        return cFeature, encodedData, label
+
 
 class ConcatenatedModel(nn.Module):
 

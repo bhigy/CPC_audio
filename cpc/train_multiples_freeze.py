@@ -372,6 +372,7 @@ def main(args):
     print("Validation datasets loaded")
     print("")
 
+    # Load Models
     if args.load is not None:
         cpcModel, args.hiddenGar, args.hiddenEncoder = \
             fl.loadModel(args.load)
@@ -383,6 +384,10 @@ def main(args):
         arNet = fl.getAR(args)
 
         cpcModel = model.CPCModel(encoderNet, arNet)
+
+    # RotatedCPCModel
+    if args.rotation:
+        cpcModel = model.RotatedCPCModel(cpcModel.gEncoder, cpcModel.gAR) # Initialize with identity layer
 
     batchSize = args.nGPU * args.batchSizeGPU
     cpcModel.supervised = args.supervised
@@ -415,6 +420,9 @@ def main(args):
                 x.requires_grad=False
     if 'criterion' in args.freeze:
         for x in cpcCriterion.parameters():
+            x.requires_grad=False
+    if args.rotation and 'rotation' in args.freeze:
+        for x in cpcModel.rotation.parameters():
             x.requires_grad=False
 
     cpcCriterion.cuda()
@@ -577,9 +585,13 @@ def parseArgs(argv):
                         help='Probability of keeping old weights. Default: 0.9')
 
     # Freezing layers
-    group_db.add_argument('--freeze', type=str, default=None,
+    parser.add_argument('--freeze', type=str, default=None,
                           help='List of the parts of the network to be freezed'
                           '(delimited by ,).')
+
+    # Add rotation matrix after LSTM layer
+    parser.add_argument('--rotation', action='store_true',
+                        help="Add a rotation matrix after the LSTM layer.")
 
     args = parser.parse_args(argv)
 
