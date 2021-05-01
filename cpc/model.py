@@ -300,6 +300,7 @@ class RotatedCPCModel(nn.Module):
         super(RotatedCPCModel, self).__init__()
         self.gEncoder = encoder
         self.gAR = AR
+        self.rotation_after_conv = rotation_after_conv
         if rotation_after_conv is False:
             rotationMatrixSize = AR.getDimOutput()
         else:
@@ -315,7 +316,7 @@ class RotatedCPCModel(nn.Module):
 
     def forward(self, batchData, label):
         encodedData = self.gEncoder(batchData).permute(0, 2, 1)
-        if rotation_after_conv is False:
+        if self.rotation_after_conv is False:
             cFeature = self.gAR(encodedData)
             cFeature = self.rotation(cFeature)
         else:
