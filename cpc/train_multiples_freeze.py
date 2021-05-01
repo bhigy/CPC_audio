@@ -387,7 +387,11 @@ def main(args):
 
     # RotatedCPCModel
     if args.rotation:
-        cpcModel = model.RotatedCPCModel(cpcModel.gEncoder, cpcModel.gAR, rotation_random_init = args.rotation_random_init) # Initialize with identity layer
+        cpcModel = model.RotatedCPCModel(
+                                        cpcModel.gEncoder, 
+                                        cpcModel.gAR, 
+                                        rotation_random_init = args.rotation_random_init, # Initialize with identity layer
+                                        rotation_after_conv = args.rotation_after_conv)
 
     batchSize = args.nGPU * args.batchSizeGPU
     cpcModel.supervised = args.supervised
@@ -593,6 +597,8 @@ def parseArgs(argv):
     parser.add_argument('--rotation', action='store_true',
                         help="Add a rotation matrix after the LSTM layer.")
     parser.add_argument('--rotation-random-init', action='store_true',
+                        help="")
+    parser.add_argument('--rotation-after-conv', action='store_true',
                         help="")
 
     args = parser.parse_args(argv)

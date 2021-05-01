@@ -294,12 +294,16 @@ class RotatedCPCModel(nn.Module):
                  encoder,
                  AR,
                  Rotation=None,
-                 rotation_random_init=False):
+                 rotation_random_init=False,
+                 rotation_after_conv=False):
 
         super(RotatedCPCModel, self).__init__()
         self.gEncoder = encoder
         self.gAR = AR
-        rotationMatrixSize = AR.getDimOutput()
+        if rotation_after_conv is False:
+            rotationMatrixSize = AR.getDimOutput()
+        else:
+            rotationMatrixSize = encoder.getDimOutput()
         if Rotation is None:
             self.rotation = nn.Linear(rotationMatrixSize,rotationMatrixSize)
             if not rotation_random_init:
@@ -311,8 +315,13 @@ class RotatedCPCModel(nn.Module):
 
     def forward(self, batchData, label):
         encodedData = self.gEncoder(batchData).permute(0, 2, 1)
-        cFeature = self.gAR(encodedData)
-        cFeature = self.rotation(cFeature)
+        if rotation_after_conv is False:
+            cFeature = self.gAR(encodedData)
+            cFeature = self.rotation(cFeature)
+        else:
+            cFeature = self.rotation(encodedData)
+            cFeature = self.gAR(cFeature)
+            
         return cFeature, encodedData, label
 
 
