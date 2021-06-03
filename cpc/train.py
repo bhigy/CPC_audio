@@ -248,7 +248,8 @@ def main(args):
 
     seqNames, speakers = findAllSeqs(args.pathDB,
                                      extension=args.file_extension,
-                                     loadCache=not args.ignore_cache)
+                                     loadCache=not args.ignore_cache,
+                                     speaker_level=args.speaker_level)
 
     print(f'Found files: {len(seqNames)} seqs, {len(speakers)} speakers')
     # Datasets
@@ -400,6 +401,8 @@ def parseArgs(argv):
                           'data.')
     group_db.add_argument('--file_extension', type=str, default=".flac",
                           help="Extension of the audio files in the dataset.")
+    group_db.add_argument('--speaker_level', type=int, default=1,
+                          help="Adjusts the level of directory used to define the speaker.")
     group_db.add_argument('--pathTrain', type=str, default=None,
                           help='Path to a .txt file containing the list of the '
                           'training sequences.')
