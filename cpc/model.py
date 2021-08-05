@@ -115,11 +115,12 @@ class MFCCEncoder(nn.Module):
         self.dimEncoded = dimEncoded
         self.MFCC = torchaudio.transforms.MFCC(n_mfcc=dimEncoded,
                                                melkwargs=melkwargs)
+        self.DOWNSAMPLING = 160
 
     def forward(self, x):
         x = x.view(x.size(0), -1)
         x = self.MFCC(x)
-        return x.permute(0, 2, 1)
+        return x
 
 
 class LFBEnconder(nn.Module):
