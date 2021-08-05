@@ -80,7 +80,7 @@ class PredictionNetwork(nn.Module):
                 self.predictors.append(
                     ShiftedConv(dimOutputAR, dimOutputEncoder, 12))
             elif rnnMode == 'transformer':
-                from transformers import buildTransformerAR
+                from cpc.transformers import buildTransformerAR
                 self.predictors.append(
                     buildTransformerAR(dimOutputEncoder,
                                        1,
