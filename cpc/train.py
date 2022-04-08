@@ -493,5 +493,6 @@ def parseArgs(argv):
 
 if __name__ == "__main__":
     torch.multiprocessing.set_start_method('spawn')
+    torch.multiprocessing.set_sharing_strategy('file_system')
     args = sys.argv[1:]
     main(args)
