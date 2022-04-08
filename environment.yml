@@ -7,7 +7,7 @@ channels:
 dependencies:
   - pytorch
   - torchvision
-  - cudatoolkit=9.2
+  - cudatoolkit=11.2
   - psutil
   - pip
   - openblas-devel
